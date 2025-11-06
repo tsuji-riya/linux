@@ -68,7 +68,9 @@ Linux 2.6.32 は、2009年12月にリリースされた長期サポート (LTS) 
 
 ## dsm232 パッチについて
 
-このコミットメッセージで言及されている "dsm232 パッチ" は、標準の Linux 2.6.32 カーネルに適用された特定のパッチセットまたはカスタマイゼーションを指していると考えられます。詳細な変更内容については、パッチ作成者または関連ドキュメントを参照してください。
+このコミットメッセージで言及されている "dsm232 パッチ" は、標準の Linux 2.6.32 カーネルに適用された特定のパッチセットまたはカスタマイゼーションを指していると考えられます。
+
+**注意**: 本リポジトリ内には dsm232 パッチの詳細な説明や変更内容を記載したドキュメントは見つかりませんでした。このパッチが標準の Linux 2.6.32 カーネルに対してどのような変更を加えているかについては、パッチの作成者や関連する外部ドキュメントを参照してください。リポジトリの履歴を見る限り、このコミットが初期インポートであるため、dsm232 は単にこのカーネルソースのバージョン識別子やビルド番号を示している可能性もあります。
 
 ## 技術的な詳細
 
@@ -196,7 +198,9 @@ Linux 2.6.32 is a Long-Term Support (LTS) kernel version released in December 20
 
 ## About the dsm232 Patch
 
-The "dsm232 patch" mentioned in the commit message likely refers to a specific patchset or customization applied to the standard Linux 2.6.32 kernel. For detailed information about the changes, please refer to the patch author or related documentation.
+The "dsm232 patch" mentioned in the commit message likely refers to a specific patchset or customization applied to the standard Linux 2.6.32 kernel.
+
+**Note**: No detailed documentation or changelog for the dsm232 patch was found within this repository. The specific modifications that this patch applies to the standard Linux 2.6.32 kernel are not documented here. For details, please refer to the patch author or external documentation. Given that this commit represents the initial import of the repository, "dsm232" may simply be a version identifier or build number for this kernel source.
 
 ## Technical Details
 
