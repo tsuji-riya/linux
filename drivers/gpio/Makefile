@@ -30,6 +30,7 @@ obj-$(CONFIG_GPIO_ADP5585)		+= gpio-adp5585.o
 obj-$(CONFIG_GPIO_AGGREGATOR)		+= gpio-aggregator.o
 obj-$(CONFIG_GPIO_ALTERA_A10SR)		+= gpio-altera-a10sr.o
 obj-$(CONFIG_GPIO_ALTERA)  		+= gpio-altera.o
+obj-$(CONFIG_GPIO_CELESTIAL_CNC1800L)		+= gpio-cnc1800l.o
 obj-$(CONFIG_GPIO_AMD8111)		+= gpio-amd8111.o
 obj-$(CONFIG_GPIO_AMD_FCH)		+= gpio-amd-fch.o
 obj-$(CONFIG_GPIO_AMDPT)		+= gpio-amdpt.o

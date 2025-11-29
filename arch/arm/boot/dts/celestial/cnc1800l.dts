@@ -1,0 +1,118 @@
+/dts-v1/;
+
+/ {
+	#address-cells = <1>;
+	#size-cells = <1>;
+	interrupt-parent = <&vic>;
+	model = "Cavium Celestial CNC1800L";
+	compatible = "cavium,cnc1800l";
+
+	aliases {
+		serial0 = &uart0;
+	};
+
+	chosen {
+		stdout-path = "serial0:115200n8";
+	};
+
+
+	memory {
+		device_type = "memory";
+		reg = <0x00000000 0x088fffff>;
+	};
+
+	cpus {
+		#address-cells = <0>;
+		#size-cells = <0>;
+
+		cpu {
+			compatible = "arm,arm1176jzf";
+			device_type = "cpu";
+		};
+	};
+
+	clocks{
+		timclk: timclk{
+			compatible = "fixed-clock";
+			#clock-cells = <0>;
+			clock-frequency = <94500000>;
+		};
+		pclk: pclk{
+			compatible = "fixed-clock";
+			#clock-cells = <0>;
+			clock-frequency = <47250000>;
+		};
+	};
+
+	vic: interrupt-controller@10130000 {
+		compatible = "snps,dw-apb-ictl";
+		reg = <0x80140000 0x1000>;
+		interrupt-controller;
+		#interrupt-cells = <1>;
+	};
+
+	timer0: timer@801e2000 {
+		compatible = "snps,dw-apb-timer-cnc1800l";
+		reg = <0x801e2000 0x100>;
+		clocks = <&pclk>;
+	};
+
+	timer1: timer@80270000 {
+		compatible = "cavium,cnc1800l-timer";
+		reg = <0x80270000 0x100>;
+		clocks = <&timclk>;
+		interrupts = <4>;
+	};
+
+	watchdog0: wd@801e1000 {
+		compatible = "snps,dw-wdt", "cavium,cnc1800l-wdt";
+		reg = <0x801e1000 0x100>;
+		interrupts = <0>;
+		clocks = <&timclk>;
+	};
+
+
+	uart0: serial@801f1000 {
+		compatible = "snps,dw-apb-uart";
+		reg = <0x801f1000 0x100>;
+		reg-io-width = <1>;
+		clocks = <&pclk>;
+		interrupts = <12>;
+		reg-shift = <2>;
+	};
+
+	clock-controller@b2100000  {
+		compatible = "cavium,cnc1800l-clockctrl";
+		reg = <0xb2100000 0x1000>;
+		clocks = <&pclk>;
+	};
+
+	usb0: ohci@80210000 {
+		compatible = "cavium,cnc1800l-ohci", "usb-ohci";
+		reg = <0x80210000 0x1000>;
+		interrupts = <27>;
+	};
+
+	usb1: ehci@80210000 {
+		compatible = "cavium,cnc1800l-ehci", "usb-ehci";
+		reg = <0x80200000 0x1000>;
+		interrupts = <22>;
+	};
+
+	nand0: nand@a4000000 {
+		#address-cells = <1>;
+		#size-cells = <0>;
+		compatible = "cavium,cnc1800l-nand";
+		reg = 	<0x80100000 0x48>,			//SMC
+				 <0xa4000000 0x2000000>;		//NAND
+	};
+
+	gpio@80260000 {
+		compatible = "cavium,cnc1800l-gpio";
+		reg = <0x80260000 0x100>;
+		gpio-controller;
+		#gpio-cells = <2>;
+		// interrupts = <6>;
+		cavium,nrdevs = <14>;
+	};
+};

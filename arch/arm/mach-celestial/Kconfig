@@ -1,0 +1,10 @@
+config MACH_CELESTIAL
+	bool "Celestial CNC1800L"
+	depends on ARCH_MULTI_V6
+	select DW_APB_ICTL
+	select SERIAL_8250
+	select SERIAL_8250_CONSOLE
+	select CNC1800L_TIMER
+	select CNC1800L_APBTIMER
+	help
+	  Support for Cavium CNC1800L Soc.

@@ -38,6 +38,13 @@ config MTD_NAND_AMS_DELTA
 	help
 	  Support for NAND flash on Amstrad E3 (Delta).
 
+config MTD_NAND_CELESTIAL_CNC1800L
+	tristate "Celestial CNC1800L NAND"
+	depends on MACH_CELESTIAL || COMPILE_TEST
+	default y
+	help
+	  Support for NAND flash on Celestial CNC1800L.
+
 config MTD_NAND_OMAP2
 	tristate "OMAP2, OMAP3, OMAP4 and Keystone NAND controller"
 	depends on ARCH_OMAP2PLUS || ARCH_KEYSTONE || ARCH_K3 || COMPILE_TEST

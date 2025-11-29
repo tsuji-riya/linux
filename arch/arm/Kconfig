@@ -371,6 +371,8 @@ source "arch/arm/mach-bcm/Kconfig"
 
 source "arch/arm/mach-berlin/Kconfig"
 
+source "arch/arm/mach-celestial/Kconfig"
+
 source "arch/arm/mach-clps711x/Kconfig"
 
 source "arch/arm/mach-davinci/Kconfig"

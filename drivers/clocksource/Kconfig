@@ -203,6 +203,20 @@ config ASM9260_TIMER
 	help
 	  Enables support for the ASM9260 timer.
 
+config CNC1800L_TIMER
+	bool "CNC1800L timer driver" if COMPILE_TEST
+	select CLKSRC_MMIO
+	select TIMER_OF
+	help
+	  Enables support for the CNC1800L timer.
+
+config CNC1800L_APBTIMER
+	bool "CNC1800L Synopsys APB timer driver" if COMPILE_TEST
+	select CLKSRC_MMIO
+	select TIMER_OF
+	help
+	  Enables support for the CNC1800L APB timer.
+
 config CLKSRC_NOMADIK_MTU
 	bool "Nomakdik clocksource driver" if COMPILE_TEST
 	depends on ARM

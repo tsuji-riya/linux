@@ -5,6 +5,7 @@ obj-$(CONFIG_MTD_SM_COMMON) 		+= sm_common.o
 
 obj-$(CONFIG_MTD_NAND_CAFE)		+= cafe_nand.o
 obj-$(CONFIG_MTD_NAND_AMS_DELTA)	+= ams-delta.o
+obj-$(CONFIG_MTD_NAND_CELESTIAL_CNC1800L)	+= cnc1800l-nand.o
 obj-$(CONFIG_MTD_NAND_DENALI)		+= denali.o
 obj-$(CONFIG_MTD_NAND_DENALI_PCI)	+= denali_pci.o
 obj-$(CONFIG_MTD_NAND_DENALI_DT)	+= denali_dt.o

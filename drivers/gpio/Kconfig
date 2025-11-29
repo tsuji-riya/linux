@@ -157,6 +157,13 @@ config GPIO_ALTERA
 
 	  If driver is built as a module it will be called gpio-altera.
 
+config GPIO_CELESTIAL_CNC1800L
+	bool "CNC1800L GPIO"
+	depends on OF_GPIO && MACH_CELESTIAL
+	select GPIOLIB_IRQCHIP
+	help
+	  Support for the CNC1800L platform GPIO.
+
 config GPIO_AMDPT
 	tristate "AMD Promontory GPIO support"
 	depends on ACPI
