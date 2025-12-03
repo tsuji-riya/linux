@@ -1,5 +1,5 @@
 /*
- *  drivers/mtd/nand/cnc_nand.c
+ *  drivers/mtd/nand/raw/cnc1800l_nand.c
  *
  *  Copyrigth (C) 2010 Celestial Semiconductor
  *                2011 Cavium
@@ -65,19 +65,17 @@
 
 #define PADDR   0x80100000
 
-// original partition structure.
-#if 0
 static struct mtd_partition cnc_nand_partitions[] = {
 	{
 		.name		= "cavm_miniloader",
 		.offset		= 0,
 		.size		= SZ_128K,
-		.mask_flags	= MTD_WRITEABLE,/*Read only*/
+		.mask_flags	= MTD_WRITEABLE,
 	}, {
 		.name		= "cavm_uboot1",
 		.offset		= MTDPART_OFS_APPEND,
 		.size		= SZ_512K,
-		.mask_flags	= MTD_WRITEABLE,/*Read only*/
+		.mask_flags	= MTD_WRITEABLE,
 	}, {
 		.name		= "cavm_uboot1_pad",
 		.offset		= MTDPART_OFS_APPEND,
@@ -87,17 +85,17 @@ static struct mtd_partition cnc_nand_partitions[] = {
 		.name		= "cavm_nvram_factory",
 		.offset		= MTDPART_OFS_APPEND,
 		.size		= SZ_128K,
-		.mask_flags	= MTD_WRITEABLE,/*Read only*/
+		.mask_flags	= MTD_WRITEABLE,
 	}, {
 		.name		= "cavm_nvram_factory_pad",
 		.offset		= MTDPART_OFS_APPEND,
 		.size		= SZ_128K,
-		.mask_flags	= MTD_WRITEABLE,/*Read only*/
+		.mask_flags	= MTD_WRITEABLE,
 	}, {
 		.name		= "cavm_nvram1b",
 		.offset		= MTDPART_OFS_APPEND,
 		.size		= SZ_128K,
-		.mask_flags	= MTD_WRITEABLE,/*Read only*/
+		.mask_flags	= MTD_WRITEABLE,
 	}, {
 		.name		= "cavm_nvram2",
 		.offset		= MTDPART_OFS_APPEND,
@@ -117,121 +115,12 @@ static struct mtd_partition cnc_nand_partitions[] = {
 		.name		= "cavm_all_img1_info",
 		.offset		= MTDPART_OFS_APPEND,
 		.size		= SZ_128K,
-		.mask_flags	= MTD_WRITEABLE,/*Read only*/
+		.mask_flags	= MTD_WRITEABLE,
 	}, {
 		.name		= "cavm_all_img1_info_pad",
 		.offset		= MTDPART_OFS_APPEND,
 		.size		= SZ_128K,
-		.mask_flags	= MTD_WRITEABLE,/*Read only*/
-	}, {
-		.name		= "cavm_netHD_Image1",
-		.offset		= MTDPART_OFS_APPEND,
-		.size		= SZ_32M,
-		.mask_flags	= MTD_WRITEABLE,/*Read only*/
-	}, {
-		.name		= "cavm_netHD_Image2",
-		.offset		= MTDPART_OFS_APPEND,
-		.size		= SZ_32M,
-		.mask_flags	= 0,
-	}, {
-		.name		= "cavm_free1",
-		.offset		= MTDPART_OFS_APPEND,
-		.size		= SZ_16M + SZ_2M + SZ_1M + SZ_512K,  /* 19.5M */
-		.mask_flags	= 0,
-	}, {
-		.name		= "cavm_free1_pad",
-		.offset		= MTDPART_OFS_APPEND,
-		.size		= SZ_256K,
-		.mask_flags	= 0,
-	}, {
-		.name		= "cavm_netHD_img2_info",
-		.offset		= MTDPART_OFS_APPEND,
-		.size		= SZ_256K,
-		.mask_flags	= 0,
-	}, {
-		.name		= "cavm_blob",
-		.offset		= MTDPART_OFS_APPEND,
-		.size		= SZ_4M - SZ_1M,
-		.mask_flags	= MTD_WRITEABLE,/*Read only*/
-	}, {
-		.name		= "cavm_uboot2",
-		.offset		= MTDPART_OFS_APPEND,
-		.size		= SZ_1M,
-// #ifdef UBOOT_UPGRADE_ALLOWED
-// 		.mask_flags	= 0,
-// #else
-		.mask_flags	= MTD_WRITEABLE,/*Read only*/
-// #endif
-	}, {
-		.name		= "cavm_ffs",
-		.offset		= MTDPART_OFS_APPEND,
-		.size		= SZ_32M,
-		.mask_flags	= 0,
-	}, {
-		.name		= "customer_area",
-		.offset		= MTDPART_OFS_APPEND,
-		.size		= SZ_4M, //MTDPART_SIZ_FULL,
-		.mask_flags	= 0,
-	}
-};
-#endif
-
-static struct mtd_partition cnc_nand_partitions[] = {
-	{
-		.name		= "cavm_miniloader",
-		.offset		= 0,
-		.size		= SZ_128K,
-		.mask_flags	= MTD_WRITEABLE,/*Read only*/
-	}, {
-		.name		= "cavm_uboot1",
-		.offset		= MTDPART_OFS_APPEND,
-		.size		= SZ_512K,
-		.mask_flags	= MTD_WRITEABLE,/*Read only*/
-	}, {
-		.name		= "cavm_uboot1_pad",
-		.offset		= MTDPART_OFS_APPEND,
-		.size		= SZ_512K,
-		.mask_flags	= 0,
-	}, {
-		.name		= "cavm_nvram_factory",
-		.offset		= MTDPART_OFS_APPEND,
-		.size		= SZ_128K,
-		.mask_flags	= MTD_WRITEABLE,/*Read only*/
-	}, {
-		.name		= "cavm_nvram_factory_pad",
-		.offset		= MTDPART_OFS_APPEND,
-		.size		= SZ_128K,
-		.mask_flags	= MTD_WRITEABLE,/*Read only*/
-	}, {
-		.name		= "cavm_nvram1b",
-		.offset		= MTDPART_OFS_APPEND,
-		.size		= SZ_128K,
-		.mask_flags	= MTD_WRITEABLE,/*Read only*/
-	}, {
-		.name		= "cavm_nvram2",
-		.offset		= MTDPART_OFS_APPEND,
-		.size		= SZ_128K,
-		.mask_flags	= 0,
-	}, {
-		.name		= "cavm_nvram2b",
-		.offset		= MTDPART_OFS_APPEND,
-		.size		= SZ_128K,
-		.mask_flags	= 0,
-	}, {
-		.name		= "cavm_splash",
-		.offset		= MTDPART_OFS_APPEND,
-		.size		= SZ_2M,
-		.mask_flags	= 0,
-	}, {
-		.name		= "cavm_all_img1_info",
-		.offset		= MTDPART_OFS_APPEND,
-		.size		= SZ_128K,
-		.mask_flags	= MTD_WRITEABLE,/*Read only*/
-	}, {
-		.name		= "cavm_all_img1_info_pad",
-		.offset		= MTDPART_OFS_APPEND,
-		.size		= SZ_128K,
-		.mask_flags	= MTD_WRITEABLE,/*Read only*/
+		.mask_flags	= MTD_WRITEABLE,
 	}, {
 		.name		= "kernel",
 		.offset		= MTDPART_OFS_APPEND,
@@ -282,12 +171,10 @@ static void cnc_nand_1bitecc_hwctl(struct nand_chip *chip, int mode)
     if (mode == NAND_ECC_READ){
         ecc_addr = (unsigned long)((u32)PADDR + ((u32)chip->legacy.IO_ADDR_R - (u32)info->iobase));
         cnc_nand_writel(info, ECC_A_OFFSET, ecc_addr);
-        // CNC_DEBUG("HW Read ECC enable--0x%x\n",(u32)ecc_addr);
     }
     else if (mode == NAND_ECC_WRITE) {
         ecc_addr = (unsigned long)((u32)PADDR + ((u32)chip->legacy.IO_ADDR_W - (u32)info->iobase));
         cnc_nand_writel(info, ECC_A_OFFSET, ecc_addr);
-        // CNC_DEBUG("HW Write ECC enable--0x%x\n",(u32)ecc_addr);
     }
 }
 
@@ -310,16 +197,12 @@ static int cnc_nand_1bitecc_calculate(struct nand_chip *chip,
 static int cnc_nand_1bitecc_correct(struct nand_chip *chip, uint8_t *dat,
 				     uint8_t *read_ecc, uint8_t *calc_ecc)
 {
-    //	struct nand_chip *chip = mtd->priv;
 	uint32_t eccNand = read_ecc[0] | (read_ecc[1] << 8) |
 					  (read_ecc[2] << 16);
 	uint32_t eccCalc = calc_ecc[0] | (calc_ecc[1] << 8) |
 					  (calc_ecc[2] << 16);
 	uint32_t diff = eccCalc ^ eccNand;
 	unsigned int bit, byte;
-
-
-    // CNC_DEBUG("eccNand=0x%x, eccCalc=0x%x, diff=0x%x\n", eccNand, eccCalc, diff);
 
 	if (diff) {
 		if ((((diff >> 1) ^ diff) & 0x555555) == 0x555555) {
@@ -341,13 +224,7 @@ static int cnc_nand_1bitecc_correct(struct nand_chip *chip, uint8_t *dat,
                 ((diff >> 10) & 0x02)  |
                 ((diff >> 9) & 0x01);
 
-            // CNC_DEBUG("byte=%d, bit=%d, dat[byte]=0x%2x\n",byte,bit,dat[byte]);
-
             dat[byte] ^= (1 << bit);
-
-
-            // CNC_DEBUG("corrected dat[byte]=0x%x\n",dat[byte]);
-
             return 1;
         } else if (!(diff & (diff - 1))) {
             /* Single bit ECC error in the ECC itself,
