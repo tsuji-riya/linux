@@ -10,6 +10,7 @@ subdir-y += aspeed
 subdir-y += axis
 subdir-y += broadcom
 subdir-y += calxeda
+subdir-y += celestial
 subdir-y += cirrus
 subdir-y += cnxt
 subdir-y += gemini

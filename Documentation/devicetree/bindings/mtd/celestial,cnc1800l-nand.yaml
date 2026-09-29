@@ -1,0 +1,62 @@
+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+%YAML 1.2
+---
+$id: http://devicetree.org/schemas/mtd/celestial,cnc1800l-nand.yaml#
+$schema: http://devicetree.org/meta-schemas/core.yaml#
+
+title: Celestial Semiconductor CNC1800L NAND controller
+
+description:
+  A memory-mapped, ALE/CLE-address-line NAND controller with a per-chip
+  select "force CE low" config register and a 1-bit hardware ECC engine
+  addressed by writing the physical byte address being accessed into an
+  ECC_A register. Conceptually similar to (but not register-compatible
+  with) the TI DaVinci AEMIF NAND controller's 1-bit ECC mode.
+
+maintainers:
+  - Riya Tsuji <tsuji.riya@gmail.com>
+
+allOf:
+  - $ref: nand-controller.yaml
+
+properties:
+  compatible:
+    const: celestial,cnc1800l-nand
+
+  reg:
+    items:
+      - description: SMC control/ECC registers
+      - description: Memory-mapped NAND data window
+
+  reg-names:
+    items:
+      - const: smc
+      - const: data
+
+  celestial,mask-ale:
+    description: Address-line bit ORed into the data window to assert ALE.
+    $ref: /schemas/types.yaml#/definitions/uint32
+    default: 8
+
+  celestial,mask-cle:
+    description: Address-line bit ORed into the data window to assert CLE.
+    $ref: /schemas/types.yaml#/definitions/uint32
+    default: 4
+
+required:
+  - compatible
+  - reg
+  - reg-names
+
+unevaluatedProperties: false
+
+examples:
+  - |
+    nand-controller@80100000 {
+        compatible = "celestial,cnc1800l-nand";
+        reg = <0x80100000 0x48>, <0xa4000000 0x2000000>;
+        reg-names = "smc", "data";
+        #address-cells = <1>;
+        #size-cells = <0>;
+    };
+...

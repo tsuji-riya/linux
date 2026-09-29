@@ -373,6 +373,15 @@ config MTD_NAND_PLATFORM
 	  devices. You will need to provide platform-specific functions
 	  via platform_data.
 
+config MTD_NAND_CNC1800L
+	tristate "Celestial CNC1800L NAND controller"
+	depends on ARCH_CELESTIAL || COMPILE_TEST
+	depends on HAS_IOMEM
+	help
+	  This enables the NAND controller driver for the Celestial
+	  Semiconductor CNC1800L SoC, including its 1-bit hardware ECC
+	  engine.
+
 config MTD_NAND_CADENCE
 	tristate "Support Cadence NAND (HPNFC) controller"
 	depends on OF && HAS_IOMEM

@@ -305,6 +305,8 @@ patternProperties:
     description: Cadence Design Systems Inc.
   "^cdtech,.*":
     description: CDTech(H.K.) Electronics Limited
+  "^celestial,.*":
+    description: Celestial Semiconductor (acquired by Cavium)
   "^cellwise,.*":
     description: CellWise Microelectronics Co., Ltd
   "^ceva,.*":

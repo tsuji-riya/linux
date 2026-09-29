@@ -265,6 +265,13 @@ config PINCTRL_EYEQ5
 	  Pin muxing supports two functions for each pin: first is GPIO, second
 	  is pin-dependent. Pin config is about bias & drive strength.
 
+config PINCTRL_CNC1800L
+	bool
+	depends on ARCH_CELESTIAL
+	default ARCH_CELESTIAL
+	select PINMUX
+	select GENERIC_PINCONF
+
 config PINCTRL_GEMINI
 	bool
 	depends on ARCH_GEMINI

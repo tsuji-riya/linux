@@ -1,0 +1,58 @@
+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+%YAML 1.2
+---
+$id: http://devicetree.org/schemas/clock/celestial,cnc1800l-clk.yaml#
+$schema: http://devicetree.org/meta-schemas/core.yaml#
+
+title: Celestial Semiconductor CNC1800L Clock/Reset Controller
+
+description:
+  This node represents the CNC1800L SoC's combined clock-generator /
+  power-control / reset register block. The vendor driver implements this
+  block as roughly 90 ad-hoc register-poking functions rather than a
+  clock-framework provider, covering many domains (display, audio, HDMI,
+  transport, graphics...) that mainline Linux has no framework support for
+  on this SoC. This binding currently only describes the USB PHY gate
+  clocks and USB reset line; most peripherals on this SoC that need a
+  clock from this block (UART, the timers, NAND, I2C, GPIO) run off an
+  always-on fixed rate and are described with plain "fixed-clock" nodes
+  instead, since the vendor driver never gates them.
+
+maintainers:
+  - Riya Tsuji <tsuji.riya@gmail.com>
+
+properties:
+  compatible:
+    const: celestial,cnc1800l-clk
+
+  reg:
+    maxItems: 1
+
+  '#clock-cells':
+    const: 1
+    description: |
+      0 = usb0-phy gate clock
+      1 = usb1-phy gate clock
+
+  '#reset-cells':
+    const: 1
+    description: |
+      0 = USB reset line
+
+required:
+  - compatible
+  - reg
+  - '#clock-cells'
+  - '#reset-cells'
+
+additionalProperties: false
+
+examples:
+  - |
+    clock-controller@b2100000 {
+        compatible = "celestial,cnc1800l-clk";
+        reg = <0xb2100000 0x1000>;
+        #clock-cells = <1>;
+        #reset-cells = <1>;
+    };
+...

@@ -520,6 +520,13 @@ config I2C_CADENCE
 	  Say yes here to select Cadence I2C Host Controller. This controller is
 	  e.g. used by Xilinx Zynq.
 
+config I2C_CNC1800L
+	tristate "Celestial CNC1800L I2C Controller"
+	depends on ARCH_CELESTIAL || COMPILE_TEST
+	help
+	  Say yes here to select the I2C controller found on the Celestial
+	  Semiconductor CNC1800L SoC.
+
 config I2C_CBUS_GPIO
 	tristate "CBUS I2C driver"
 	depends on GPIOLIB || COMPILE_TEST

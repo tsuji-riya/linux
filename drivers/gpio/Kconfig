@@ -279,6 +279,13 @@ config GPIO_CLPS711X
 	help
 	  Say yes here to support GPIO on CLPS711X SoCs.
 
+config GPIO_CNC1800L
+	tristate "Celestial CNC1800L GPIO support"
+	depends on ARCH_CELESTIAL || COMPILE_TEST
+	help
+	  Say yes here to support the 64-line GPIO controller on the
+	  Celestial Semiconductor CNC1800L SoC.
+
 config GPIO_DAVINCI
 	tristate "TI Davinci/Keystone GPIO support"
 	default y if ARCH_DAVINCI

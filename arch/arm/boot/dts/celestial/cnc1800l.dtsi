@@ -1,0 +1,224 @@
+// SPDX-License-Identifier: GPL-2.0
+/*
+ * cnc1800l.dtsi - Device tree file for the Celestial Semiconductor CNC1800L SoC
+ *
+ * Register maps and IRQ numbers in this file were reverse-derived from the
+ * vendor Linux 2.6.32 board-file port (arch/arm/mach-celestial/ in the
+ * DSM-232 GPL release), which has no devicetree of its own.
+ */
+
+/ {
+	#address-cells = <1>;
+	#size-cells = <1>;
+	compatible = "celestial,cnc1800l";
+	interrupt-parent = <&vic>;
+
+	cpus {
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		cpu@0 {
+			device_type = "cpu";
+			/*
+			 * Confirmed ARM1176JZF-S via CONFIG_ARM1176 in the
+			 * vendor U-Boot port (arch/arm/cpu/arm1176/cnc1800l/,
+			 * board/cavium/cnc1800l/) -- the vendor Linux kernel's
+			 * CONFIG_CPU_V6 without CPU_32v6K just means it never
+			 * used v6k-specific instructions, not that the core
+			 * lacks them.
+			 */
+			compatible = "arm,arm1176jzf-s";
+			reg = <0x0>;
+		};
+	};
+
+	clocks {
+		/* Input to the APB free-running counter used as clocksource */
+		pclk: pclk {
+			#clock-cells = <0>;
+			compatible = "fixed-clock";
+			clock-frequency = <47250000>;
+		};
+
+		/* Input to the AHB timer used as clockevent */
+		ahb_timer_clk: ahb-timer-clk {
+			#clock-cells = <0>;
+			compatible = "fixed-clock";
+			clock-frequency = <94500000>;
+		};
+	};
+
+	soc@80100000 {
+		#address-cells = <1>;
+		#size-cells = <1>;
+		compatible = "simple-bus";
+		ranges = <0x80100000 0x80100000 0x00500000>,
+			 <0xb2100000 0xb2100000 0x00100000>;
+
+		vic: interrupt-controller@80140000 {
+			compatible = "celestial,cnc1800l-vic";
+			reg = <0x80140000 0x100>;
+			interrupt-controller;
+			#interrupt-cells = <1>;
+		};
+
+		timer@80270000 {
+			compatible = "celestial,cnc1800l-timer";
+			reg = <0x80270000 0x30>, <0x801e2000 0xb0>;
+			reg-names = "ahb", "apb";
+			interrupts = <4>;
+			clocks = <&ahb_timer_clk>, <&pclk>;
+			clock-names = "ahb", "apb";
+		};
+
+		clkc: clock-controller@b2100000 {
+			compatible = "celestial,cnc1800l-clk";
+			reg = <0xb2100000 0x1000>;
+			#clock-cells = <1>;
+			#reset-cells = <1>;
+		};
+
+		pinctrl: pinctrl@b2110000 {
+			compatible = "celestial,cnc1800l-pinctrl";
+			reg = <0xb2110000 0x100>;
+
+			i2c0_pins: i2c0-pins {
+				groups = "i2c0";
+				function = "i2c0";
+			};
+
+			uart0_pins: uart0-pins {
+				groups = "uart0";
+				function = "uart0";
+			};
+
+			uart1_pins: uart1-pins {
+				groups = "uart1";
+				function = "uart1";
+			};
+
+			sdio_pins: sdio-pins {
+				groups = "sdio";
+				function = "sdio";
+			};
+		};
+
+		uart0: serial@801f1000 {
+			compatible = "snps,dw-apb-uart";
+			reg = <0x801f1000 0x100>;
+			interrupts = <12>;
+			clocks = <&pclk>;
+			clock-frequency = <47250000>;
+			reg-shift = <2>;
+			reg-io-width = <4>;
+			pinctrl-names = "default";
+			pinctrl-0 = <&uart0_pins>;
+			status = "disabled";
+		};
+
+		uart1: serial@801f2000 {
+			compatible = "snps,dw-apb-uart";
+			reg = <0x801f2000 0x100>;
+			interrupts = <13>;
+			clocks = <&pclk>;
+			clock-frequency = <47250000>;
+			reg-shift = <2>;
+			reg-io-width = <4>;
+			pinctrl-names = "default";
+			pinctrl-0 = <&uart1_pins>;
+			status = "disabled";
+		};
+
+		gpio: gpio@80260000 {
+			/*
+			 * The SoC also demuxes all 64 GPIO lines onto VIC
+			 * line 6 (see mach/irqs.h's IRQ_GPIO), but this
+			 * driver does not yet implement a cascaded irqchip
+			 * for it -- no consumer on this board needs a GPIO
+			 * interrupt today.
+			 */
+			compatible = "celestial,cnc1800l-gpio";
+			reg = <0x80260000 0x100>;
+			gpio-controller;
+			#gpio-cells = <2>;
+			ngpios = <64>;
+		};
+
+		i2c0: i2c@80170000 {
+			compatible = "celestial,cnc1800l-i2c";
+			reg = <0x80170000 0x1000>;
+			interrupts = <2>;
+			#address-cells = <1>;
+			#size-cells = <0>;
+			clock-frequency = <100000>;
+			pinctrl-names = "default";
+			pinctrl-0 = <&i2c0_pins>;
+			status = "disabled";
+		};
+
+		wdt: watchdog@801e1000 {
+			/*
+			 * The vendor driver never reads back a clock rate
+			 * (the hardware's timeout range codes are already
+			 * calibrated in real seconds), so the exact input
+			 * clock is unconfirmed; pclk is assumed here since
+			 * this block sits on the same APB peripheral
+			 * cluster as the UARTs and the APB timer. This only
+			 * affects the *reported* timeout value, not whether
+			 * the watchdog actually resets the board.
+			 */
+			compatible = "snps,dw-wdt";
+			reg = <0x801e1000 0x100>;
+			clocks = <&pclk>;
+			clock-names = "tclk";
+			status = "disabled";
+		};
+
+		usb_ehci: usb@80200000 {
+			compatible = "generic-ehci";
+			reg = <0x80200000 0x1000>;
+			interrupts = <22>;
+			clocks = <&clkc 0>;
+			resets = <&clkc 0>;
+			status = "disabled";
+		};
+
+		usb_ohci: usb@80210000 {
+			compatible = "generic-ohci";
+			reg = <0x80210000 0x1000>;
+			interrupts = <27>;
+			clocks = <&clkc 1>;
+			resets = <&clkc 0>;
+			status = "disabled";
+		};
+
+		nand0: nand-controller@80100000 {
+			compatible = "celestial,cnc1800l-nand";
+			reg = <0x80100000 0x48>, <0xa4000000 0x2000000>;
+			reg-names = "smc", "data";
+			status = "disabled";
+		};
+
+		/*
+		 * The vendor "MSHCI" driver (drivers/mmc/host/mshci*.c) uses
+		 * exactly the Synopsys DW Mobile Storage Host Controller
+		 * register layout (CTRL/PWREN/CLKDIV/... at the same
+		 * offsets as dw_mmc.h), so this reuses the mainline
+		 * snps,dw-mshc driver rather than a new one. biu/ciu are
+		 * both modelled as the fixed 47.25 MHz pclk, matching the
+		 * vendor driver's hardcoded host->max_clk = 47250000.
+		 */
+		mmc0: mmc@80290000 {
+			compatible = "snps,dw-mshc";
+			reg = <0x80290000 0x1000>;
+			interrupts = <18>;
+			clocks = <&pclk>, <&pclk>;
+			clock-names = "biu", "ciu";
+			bus-width = <4>;
+			non-removable;
+			pinctrl-names = "default";
+			pinctrl-0 = <&sdio_pins>;
+			status = "disabled";
+		};
+	};
+};

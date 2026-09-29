@@ -1,0 +1,18 @@
+# SPDX-License-Identifier: GPL-2.0
+config ARCH_CELESTIAL
+	bool "Celestial Semiconductor CNC1800L SoC"
+	depends on ARCH_MULTI_V6
+	select PINCTRL
+	select PINCTRL_CNC1800L
+	select GPIOLIB
+	select GPIO_CNC1800L
+	select CNC1800L_TIMER
+	select COMMON_CLK_CNC1800L
+	help
+	  Support for the Celestial Semiconductor (later acquired by Cavium)
+	  CNC1800L System-on-Chip, as used in the D-Link DSM-232 digital
+	  satellite receiver (Tiga-Mini board).
+
+	  The CNC1800L integrates a single ARM1176JZF-S core (confirmed via
+	  CONFIG_ARM1176 in the vendor U-Boot port's cnc1800l board files;
+	  ARCH_MULTI_V6 already selects the required CPU_V6K).

@@ -1,0 +1,56 @@
+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+%YAML 1.2
+---
+$id: http://devicetree.org/schemas/gpio/celestial,cnc1800l-gpio.yaml#
+$schema: http://devicetree.org/meta-schemas/core.yaml#
+
+title: Celestial Semiconductor CNC1800L GPIO Controller
+
+description:
+  64 GPIO lines split across two 32-bit ports, each with a DR (output
+  data) / DDR (direction) / EXT_PORT (input data) register triplet.
+  Direction polarity is inverted from the usual convention (the DDR bit is
+  set for input, clear for output). This controller does not yet have a
+  cascaded irqchip implementation, even though the hardware does demux all
+  64 lines onto one parent interrupt.
+
+maintainers:
+  - Riya Tsuji <tsuji.riya@gmail.com>
+
+allOf:
+  - $ref: gpio.yaml#
+
+properties:
+  compatible:
+    const: celestial,cnc1800l-gpio
+
+  reg:
+    maxItems: 1
+
+  gpio-controller: true
+
+  '#gpio-cells':
+    const: 2
+
+  ngpios:
+    default: 64
+    maximum: 64
+
+required:
+  - compatible
+  - reg
+  - gpio-controller
+  - '#gpio-cells'
+
+unevaluatedProperties: false
+
+examples:
+  - |
+    gpio@80260000 {
+        compatible = "celestial,cnc1800l-gpio";
+        reg = <0x80260000 0x100>;
+        gpio-controller;
+        #gpio-cells = <2>;
+        ngpios = <64>;
+    };
+...

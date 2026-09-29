@@ -1,0 +1,59 @@
+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+%YAML 1.2
+---
+$id: http://devicetree.org/schemas/pinctrl/celestial,cnc1800l-pinctrl.yaml#
+$schema: http://devicetree.org/meta-schemas/core.yaml#
+
+title: Celestial Semiconductor CNC1800L Pin Mux Controller
+
+description:
+  The CNC1800L pin mux is a set of 16-bit "group enable" registers, each
+  gating a whole bank of pins between GPIO and one on-chip peripheral
+  rather than offering a per-pin function field. Each hardware group is
+  modelled as one pinmux function with exactly one group of the same name;
+  individual pin numbers are not described since no authoritative per-pin
+  table is available for this SoC.
+
+maintainers:
+  - Riya Tsuji <tsuji.riya@gmail.com>
+
+properties:
+  compatible:
+    const: celestial,cnc1800l-pinctrl
+
+  reg:
+    maxItems: 1
+
+patternProperties:
+  '-pins$':
+    type: object
+    additionalProperties: false
+    properties:
+      groups:
+        description: Name of the pin group to configure.
+        $ref: /schemas/types.yaml#/definitions/string
+      function:
+        description: Function to select for this group.
+        $ref: /schemas/types.yaml#/definitions/string
+    required:
+      - groups
+      - function
+
+required:
+  - compatible
+  - reg
+
+additionalProperties: false
+
+examples:
+  - |
+    pinctrl@b2110000 {
+        compatible = "celestial,cnc1800l-pinctrl";
+        reg = <0xb2110000 0x100>;
+
+        i2c0_pins: i2c0-pins {
+            groups = "i2c0";
+            function = "i2c0";
+        };
+    };
+...

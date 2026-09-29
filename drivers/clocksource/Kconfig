@@ -189,6 +189,13 @@ config VT8500_TIMER
 	help
 	  Enables support for the VT8500 driver.
 
+config CNC1800L_TIMER
+	bool "Celestial CNC1800L timer driver" if COMPILE_TEST
+	depends on HAS_IOMEM
+	help
+	  Enables the clocksource/clockevent driver for the AHB and APB
+	  timer blocks found on the Celestial Semiconductor CNC1800L SoC.
+
 config NPCM7XX_TIMER
 	bool "NPCM7xx timer driver" if COMPILE_TEST
 	depends on HAS_IOMEM

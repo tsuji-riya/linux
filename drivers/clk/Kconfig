@@ -274,6 +274,15 @@ config COMMON_CLK_GEMINI
 	  This driver supports the SoC clocks on the Cortina Systems Gemini
 	  platform, also known as SL3516 or CS3516.
 
+config COMMON_CLK_CNC1800L
+	bool "Clock/reset driver for Celestial CNC1800L SoC"
+	depends on ARCH_CELESTIAL || COMPILE_TEST
+	select RESET_CONTROLLER
+	help
+	  This driver supports the USB PHY gate clocks and USB reset line
+	  on the Celestial Semiconductor CNC1800L SoC's combined clock and
+	  power-control register block.
+
 config COMMON_CLK_LAN966X
 	tristate "Generic Clock Controller driver for LAN966X SoC"
 	depends on HAS_IOMEM

@@ -1,0 +1,179 @@
+// SPDX-License-Identifier: GPL-2.0
+/*
+ * cnc1800l-tigamini.dts - D-Link DSM-232 (Celestial CNC1800L, Tiga-Mini board)
+ *
+ * NAND partition layout reproduced from the vendor
+ * arch/arm/mach-celestial/nand.c CONFIG_CELESTIAL_TIGA_MINI table (offsets
+ * computed from the original MTDPART_OFS_APPEND sizes).
+ */
+
+/dts-v1/;
+#include <dt-bindings/gpio/gpio.h>
+#include "cnc1800l.dtsi"
+
+/ {
+	model = "D-Link DSM-232";
+	compatible = "dlink,dsm-232", "celestial,cnc1800l";
+
+	memory@0 {
+		device_type = "memory";
+		reg = <0x00000000 0x10000000>; /* 256 MiB */
+	};
+
+	chosen {
+		bootargs = "console=ttyS0,115200n8 root=/dev/mtdblock18 rootfstype=jffs2";
+		stdout-path = &uart0;
+	};
+
+	/*
+	 * AR6000 SDIO Wi-Fi module reset, GPIO 10 (vendor
+	 * mshci-cnc1800l.c: driven low then high before probing MSHCI).
+	 */
+	wifi_pwrseq: wifi-pwrseq {
+		compatible = "mmc-pwrseq-simple";
+		reset-gpios = <&gpio 10 GPIO_ACTIVE_LOW>;
+		post-power-on-delay-ms = <1>;
+	};
+};
+
+&uart0 {
+	status = "okay";
+};
+
+&uart1 {
+	status = "okay";
+};
+
+&i2c0 {
+	status = "okay";
+};
+
+&gpio {
+	status = "okay";
+};
+
+&pinctrl {
+	status = "okay";
+};
+
+&clkc {
+	status = "okay";
+};
+
+&usb_ehci {
+	status = "okay";
+};
+
+&usb_ohci {
+	status = "okay";
+};
+
+&wdt {
+	status = "okay";
+};
+
+&mmc0 {
+	mmc-pwrseq = <&wifi_pwrseq>;
+	status = "okay";
+};
+
+&nand0 {
+	status = "okay";
+
+	partitions {
+		compatible = "fixed-partitions";
+		#address-cells = <1>;
+		#size-cells = <1>;
+
+		partition@0 {
+			label = "cavm_miniloader";
+			reg = <0x00000000 0x00020000>;
+			read-only;
+		};
+		partition@20000 {
+			label = "cavm_uboot1";
+			reg = <0x00020000 0x00080000>;
+			read-only;
+		};
+		partition@a0000 {
+			label = "cavm_uboot1_pad";
+			reg = <0x000a0000 0x00080000>;
+		};
+		partition@120000 {
+			label = "cavm_nvram_factory";
+			reg = <0x00120000 0x00020000>;
+			read-only;
+		};
+		partition@140000 {
+			label = "cavm_nvram_factory_pad";
+			reg = <0x00140000 0x00020000>;
+			read-only;
+		};
+		partition@160000 {
+			label = "cavm_nvram1b";
+			reg = <0x00160000 0x00020000>;
+			read-only;
+		};
+		partition@180000 {
+			label = "cavm_nvram2";
+			reg = <0x00180000 0x00020000>;
+		};
+		partition@1a0000 {
+			label = "cavm_nvram2b";
+			reg = <0x001a0000 0x00020000>;
+		};
+		partition@1c0000 {
+			label = "cavm_splash";
+			reg = <0x001c0000 0x00200000>;
+		};
+		partition@3c0000 {
+			label = "cavm_all_img1_info";
+			reg = <0x003c0000 0x00020000>;
+			read-only;
+		};
+		partition@3e0000 {
+			label = "cavm_all_img1_info_pad";
+			reg = <0x003e0000 0x00020000>;
+			read-only;
+		};
+		partition@400000 {
+			label = "cavm_netHD_Image1";
+			reg = <0x00400000 0x02000000>;
+			read-only;
+		};
+		partition@2400000 {
+			label = "cavm_netHD_Image2";
+			reg = <0x02400000 0x02000000>;
+		};
+		partition@4400000 {
+			label = "cavm_free1";
+			reg = <0x04400000 0x01380000>;
+		};
+		partition@5780000 {
+			label = "cavm_free1_pad";
+			reg = <0x05780000 0x00040000>;
+		};
+		partition@57c0000 {
+			label = "cavm_netHD_img2_info";
+			reg = <0x057c0000 0x00040000>;
+		};
+		partition@5800000 {
+			label = "cavm_blob";
+			reg = <0x05800000 0x00300000>;
+			read-only;
+		};
+		partition@5b00000 {
+			label = "cavm_uboot2";
+			reg = <0x05b00000 0x00100000>;
+			read-only;
+		};
+		partition@5c00000 {
+			label = "cavm_ffs";
+			reg = <0x05c00000 0x02000000>;
+		};
+		partition@7c00000 {
+			label = "customer_area";
+			reg = <0x07c00000 0x00400000>;
+		};
+	};
+};

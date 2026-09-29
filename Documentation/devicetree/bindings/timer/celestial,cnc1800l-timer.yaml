@@ -1,0 +1,67 @@
+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+%YAML 1.2
+---
+$id: http://devicetree.org/schemas/timer/celestial,cnc1800l-timer.yaml#
+$schema: http://devicetree.org/meta-schemas/core.yaml#
+
+title: Celestial Semiconductor CNC1800L Timer
+
+description:
+  Combines the SoC's two independent timer IP blocks into a single time
+  base, matching the vendor board code's usage of them as one unit - the
+  "ahb" block (a 32-bit down-counter with a one-shot/periodic mode bit) as
+  the clockevent, and the "apb" block (a free-running dual DesignWare-APB
+  timer instance used as a single continuous counter) as the clocksource.
+
+maintainers:
+  - Riya Tsuji <tsuji.riya@gmail.com>
+
+properties:
+  compatible:
+    const: celestial,cnc1800l-timer
+
+  reg:
+    items:
+      - description: AHB timer (clockevent) registers
+      - description: APB timer (clocksource) registers
+
+  reg-names:
+    items:
+      - const: ahb
+      - const: apb
+
+  interrupts:
+    maxItems: 1
+    description: AHB timer interrupt
+
+  clocks:
+    items:
+      - description: AHB timer input clock
+      - description: APB timer input clock
+
+  clock-names:
+    items:
+      - const: ahb
+      - const: apb
+
+required:
+  - compatible
+  - reg
+  - reg-names
+  - interrupts
+  - clocks
+  - clock-names
+
+additionalProperties: false
+
+examples:
+  - |
+    timer@80270000 {
+        compatible = "celestial,cnc1800l-timer";
+        reg = <0x80270000 0x30>, <0x801e2000 0xb0>;
+        reg-names = "ahb", "apb";
+        interrupts = <4>;
+        clocks = <&ahb_timer_clk>, <&pclk>;
+        clock-names = "ahb", "apb";
+    };
+...
