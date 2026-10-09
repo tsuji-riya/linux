@@ -1,0 +1,512 @@
+// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
+/*
+ * "MX10" style Rockchip RK3229 Android TV box (1 GiB DDR3, 8 GiB eMMC),
+ * ported from the vendor 3.10.104 device tree found in its firmware
+ * (Rockchip RK322x SDK Android 7.1.2, build "MX10-14-202501061756").
+ *
+ * The board follows the Rockchip RK322x box reference design, so most of
+ * this file is shared with rk3229-xms6.dts.
+ *
+ * Items taken from the vendor DT and NOT verified on hardware are marked
+ * with "TODO(verify)".
+ */
+
+/dts-v1/;
+
+#include <dt-bindings/input/input.h>
+#include <dt-bindings/leds/common.h>
+#include "rk3229.dtsi"
+
+/ {
+	model = "MX10 (Rockchip RK3229 TV box)";
+	compatible = "rockchip,rk3229-mx10", "rockchip,rk3229";
+
+	aliases {
+		mmc0 = &sdmmc;
+		mmc1 = &sdio;
+		mmc2 = &emmc;
+	};
+
+	chosen {
+		stdout-path = "serial2:1500000n8";
+	};
+
+	/*
+	 * The vendor DT leaves the memory node empty (<0 0>): the Rockchip
+	 * loader passes the size at run time.  The firmware property
+	 * roca.mem.size=8GB1GB (8 GiB flash + 1 GiB RAM) indicates 1 GiB.
+	 * U-Boot fixes this node up from the detected DRAM size.
+	 */
+	memory@60000000 {
+		device_type = "memory";
+		reg = <0x60000000 0x40000000>;
+	};
+
+	/*
+	 * trust.img (TOS) is loaded by the Rockchip loader to 0x68400000
+	 * (see its header) and runs in the secure world.  The reference
+	 * OP-TEE setup for RK322x protects 0x68400000-0x68600000, so keep
+	 * Linux away from that range.  TODO(verify): exact protected size.
+	 */
+	reserved-memory {
+		#address-cells = <1>;
+		#size-cells = <1>;
+		ranges;
+
+		tos@68400000 {
+			reg = <0x68400000 0x200000>;
+			no-map;
+		};
+	};
+
+	/*
+	 * The Rockchip secure firmware (trust.img/TOS) in the eMMC provides
+	 * PSCI, but the vendor DT describes it as legacy PSCI 0.1 with fixed
+	 * function IDs (cpu_on = 0x84000003 ...).  Whether it also implements
+	 * PSCI_VERSION is unknown, so describe it exactly like the vendor DT
+	 * instead of relying on the PSCI 0.2 probing done for rk322x.dtsi.
+	 */
+	psci {
+		compatible = "arm,psci";
+		method = "smc";
+		cpu_suspend = <0x84000001>;
+		cpu_off = <0x84000002>;
+		cpu_on = <0x84000003>;
+	};
+
+	dc_12v: regulator-dc-12v {
+		compatible = "regulator-fixed";
+		regulator-name = "dc_12v";
+		regulator-always-on;
+		regulator-boot-on;
+		regulator-min-microvolt = <12000000>;
+		regulator-max-microvolt = <12000000>;
+	};
+
+	ext_gmac: ext_gmac {
+		compatible = "fixed-clock";
+		clock-frequency = <125000000>;
+		clock-output-names = "ext_gmac";
+		#clock-cells = <0>;
+	};
+
+	gpio-keys {
+		compatible = "gpio-keys";
+		pinctrl-names = "default";
+		pinctrl-0 = <&pwr_key>;
+
+		/* vendor: shutdown-key { shutdown_key_io = <&gpio0 3 1>; } */
+		power-key {
+			label = "GPIO Key Power";
+			gpios = <&gpio0 RK_PA3 GPIO_ACTIVE_LOW>;
+			linux,code = <KEY_POWER>;
+			debounce-interval = <100>;
+			wakeup-source;
+		};
+	};
+
+	/*
+	 * Infrared receiver.  The vendor kernel decodes NEC-like frames in
+	 * the PWM3 block (pin GPIO1_B3, "pwmir1-pin"); mainline has no such
+	 * hardware decoder support, so sample the pin with gpio-ir-receiver.
+	 * Vendor user codes: 0x4040, 0xfe01, 0x1dcc, ...
+	 * Load a keymap with ir-keytable(1).
+	 */
+	ir-receiver {
+		compatible = "gpio-ir-receiver";
+		gpios = <&gpio1 RK_PB3 GPIO_ACTIVE_LOW>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&ir_int>;
+		linux,rc-map-name = "rc-empty";
+	};
+
+	/*
+	 * Front status LEDs (vendor "status-led" node).
+	 * TODO(verify): polarity; the vendor value "1" is interpreted by a
+	 * vendor specific driver.  The xms6 board (same reference design)
+	 * uses GPIO3_C5 active high.
+	 */
+	leds {
+		compatible = "gpio-leds";
+
+		led-0 {
+			color = <LED_COLOR_ID_RED>;
+			function = LED_FUNCTION_STATUS;
+			gpios = <&gpio3 RK_PC5 GPIO_ACTIVE_HIGH>;
+			default-state = "keep";
+		};
+
+		led-1 {
+			color = <LED_COLOR_ID_BLUE>;
+			function = LED_FUNCTION_POWER;
+			gpios = <&gpio1 RK_PA7 GPIO_ACTIVE_HIGH>;
+			default-state = "keep";
+		};
+	};
+
+	/*
+	 * HDMI audio: I2S0 -> dw-hdmi (vendor "rockchip_hdmi_i2s").
+	 */
+	hdmi-sound {
+		compatible = "simple-audio-card";
+		simple-audio-card,name = "HDMI";
+		simple-audio-card,format = "i2s";
+		simple-audio-card,mclk-fs = <256>;
+
+		simple-audio-card,cpu {
+			sound-dai = <&i2s0>;
+		};
+
+		simple-audio-card,codec {
+			sound-dai = <&hdmi>;
+		};
+	};
+
+	/* SDIO Wi-Fi (GPIO2_D2 "WIFI,poweren_gpio") and BT (GPIO2_D5) power */
+	sdio_pwrseq: sdio-pwrseq {
+		compatible = "mmc-pwrseq-simple";
+		reset-gpios = <&gpio2 RK_PD2 GPIO_ACTIVE_LOW>,
+			      <&gpio2 RK_PD5 GPIO_ACTIVE_LOW>;
+	};
+
+	/*
+	 * SD slot power switch: vendor sdmmc node has "power-inverted" and
+	 * the sdmmc-pwren pin is GPIO1_B6.
+	 * TODO(verify): polarity of the switch.
+	 */
+	vcc_sd: regulator-vcc-sd {
+		compatible = "regulator-fixed";
+		gpio = <&gpio1 RK_PB6 GPIO_ACTIVE_LOW>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&sdmmc_pwren_pin>;
+		regulator-name = "vcc_sd";
+		regulator-min-microvolt = <3300000>;
+		regulator-max-microvolt = <3300000>;
+		regulator-boot-on;
+		vin-supply = <&vccio_3v3>;
+	};
+
+	/* USB host VBUS: vendor usb_control host_drv_gpio = GPIO3_C4 */
+	vcc_host: regulator-vcc-host {
+		compatible = "regulator-fixed";
+		enable-active-high;
+		gpio = <&gpio3 RK_PC4 GPIO_ACTIVE_HIGH>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&host_vbus_drv>;
+		regulator-name = "vcc_host";
+		regulator-always-on;
+		regulator-boot-on;
+		vin-supply = <&vcc_sys>;
+	};
+
+	vcc_phy: regulator-vcc-phy {
+		compatible = "regulator-fixed";
+		enable-active-high;
+		regulator-name = "vcc_phy";
+		regulator-min-microvolt = <1800000>;
+		regulator-max-microvolt = <1800000>;
+		regulator-always-on;
+		regulator-boot-on;
+		vin-supply = <&vccio_1v8>;
+	};
+
+	vcc_sys: regulator-vcc-sys {
+		compatible = "regulator-fixed";
+		regulator-name = "vcc_sys";
+		regulator-always-on;
+		regulator-boot-on;
+		regulator-min-microvolt = <5000000>;
+		regulator-max-microvolt = <5000000>;
+		vin-supply = <&dc_12v>;
+	};
+
+	vccio_1v8: regulator-vccio-1v8 {
+		compatible = "regulator-fixed";
+		regulator-name = "vccio_1v8";
+		regulator-min-microvolt = <1800000>;
+		regulator-max-microvolt = <1800000>;
+		regulator-always-on;
+		vin-supply = <&vcc_sys>;
+	};
+
+	vccio_3v3: regulator-vccio-3v3 {
+		compatible = "regulator-fixed";
+		regulator-name = "vccio_3v3";
+		regulator-min-microvolt = <3300000>;
+		regulator-max-microvolt = <3300000>;
+		regulator-always-on;
+		vin-supply = <&vcc_sys>;
+	};
+
+	/* vendor pwm-regulator1: PWM1, 0.95 V - 1.40 V */
+	vdd_arm: regulator-vdd-arm {
+		compatible = "pwm-regulator";
+		pwms = <&pwm1 0 25000 1>;
+		pwm-supply = <&vcc_sys>;
+		regulator-name = "vdd_arm";
+		regulator-min-microvolt = <950000>;
+		regulator-max-microvolt = <1400000>;
+		regulator-always-on;
+		regulator-boot-on;
+	};
+
+	/* vendor pwm-regulator2: PWM2, 1.00 V - 1.30 V */
+	vdd_log: regulator-vdd-log {
+		compatible = "pwm-regulator";
+		pwms = <&pwm2 0 25000 1>;
+		pwm-supply = <&vcc_sys>;
+		regulator-name = "vdd_log";
+		regulator-min-microvolt = <1000000>;
+		regulator-max-microvolt = <1300000>;
+		regulator-always-on;
+		regulator-boot-on;
+	};
+};
+
+&cpu0 {
+	cpu-supply = <&vdd_arm>;
+};
+
+&cpu1 {
+	cpu-supply = <&vdd_arm>;
+};
+
+&cpu2 {
+	cpu-supply = <&vdd_arm>;
+};
+
+&cpu3 {
+	cpu-supply = <&vdd_arm>;
+};
+
+&emmc {
+	cap-mmc-highspeed;
+	non-removable;
+	status = "okay";
+};
+
+/* Internal 10/100 PHY, RMII, 50 MHz reference clock provided by the SoC */
+&gmac {
+	assigned-clocks = <&cru SCLK_MAC_SRC>;
+	assigned-clock-rates = <50000000>;
+	clock_in_out = "output";
+	phy-handle = <&phy>;
+	phy-mode = "rmii";
+	phy-supply = <&vcc_phy>;
+	status = "okay";
+
+	mdio {
+		compatible = "snps,dwmac-mdio";
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		phy: ethernet-phy@0 {
+			compatible = "ethernet-phy-id1234.d400",
+				     "ethernet-phy-ieee802.3-c22";
+			reg = <0>;
+			clocks = <&cru SCLK_MAC_PHY>;
+			phy-is-integrated;
+			resets = <&cru SRST_MACPHY>;
+		};
+	};
+};
+
+&gpu {
+	mali-supply = <&vdd_log>;
+	status = "okay";
+};
+
+&hdmi {
+	#sound-dai-cells = <0>;
+	status = "okay";
+};
+
+&hdmi_phy {
+	status = "okay";
+};
+
+&i2s0 {
+	#sound-dai-cells = <0>;
+	status = "okay";
+};
+
+&iep_mmu {
+	status = "okay";
+};
+
+/* vendor io-domains: vccio1 = 3.3 V, vccio2 = 1.8 V, vccio4 = 3.3 V */
+&io_domains {
+	status = "okay";
+
+	vccio1-supply = <&vccio_3v3>;
+	vccio2-supply = <&vccio_1v8>;
+	vccio4-supply = <&vccio_3v3>;
+};
+
+&pinctrl {
+	usb {
+		host_vbus_drv: host-vbus-drv {
+			rockchip,pins = <3 RK_PC4 RK_FUNC_GPIO &pcfg_pull_none>;
+		};
+	};
+
+	keys {
+		pwr_key: pwr-key {
+			rockchip,pins = <0 RK_PA3 RK_FUNC_GPIO &pcfg_pull_up>;
+		};
+	};
+
+	ir {
+		ir_int: ir-int {
+			rockchip,pins = <1 RK_PB3 RK_FUNC_GPIO &pcfg_pull_none>;
+		};
+	};
+
+	sdmmc-extra {
+		sdmmc_pwren_pin: sdmmc-pwren-pin {
+			rockchip,pins = <1 RK_PB6 RK_FUNC_GPIO &pcfg_pull_none>;
+		};
+	};
+
+	sdio-extra {
+		/* 32.768 kHz low power clock for the Wi-Fi/BT module */
+		clk_32k_out: clk-32k-out {
+			rockchip,pins = <1 RK_PB0 2 &pcfg_pull_none>;
+		};
+	};
+
+	/* Bluetooth UART: vendor "uart1-1" group (not present in rk322x.dtsi) */
+	uart1-bt {
+		uart1_bt_xfer: uart1-bt-xfer {
+			rockchip,pins = <3 RK_PB6 1 &pcfg_pull_up>,
+					<3 RK_PB5 1 &pcfg_pull_none>;
+		};
+
+		uart1_bt_cts: uart1-bt-cts {
+			rockchip,pins = <3 RK_PA7 1 &pcfg_pull_none>;
+		};
+
+		uart1_bt_rts: uart1-bt-rts {
+			rockchip,pins = <3 RK_PA6 1 &pcfg_pull_none>;
+		};
+	};
+};
+
+&pwm1 {
+	status = "okay";
+};
+
+&pwm2 {
+	status = "okay";
+};
+
+/*
+ * SDIO Wi-Fi.  The firmware ships drivers for several modules (ap6330 /
+ * bcmdhd, rtl8189es, rtl8723bs, esp8089, ssv6051, ...) and probes at
+ * run time, so the fitted chip is board-revision dependent.  Only the
+ * generic bus wiring is described here.
+ */
+&sdio {
+	bus-width = <4>;
+	cap-sd-highspeed;
+	cap-sdio-irq;
+	mmc-pwrseq = <&sdio_pwrseq>;
+	non-removable;
+	pinctrl-names = "default";
+	pinctrl-0 = <&sdio_clk &sdio_cmd &sdio_bus4 &clk_32k_out>;
+	vqmmc-supply = <&vccio_1v8>;
+	status = "okay";
+};
+
+&sdmmc {
+	broken-cd;
+	cap-mmc-highspeed;
+	cap-sd-highspeed;
+	disable-wp;
+	vmmc-supply = <&vcc_sd>;
+	vqmmc-supply = <&vccio_3v3>;
+	status = "okay";
+};
+
+&tsadc {
+	rockchip,hw-tshut-mode = <0>;
+	status = "okay";
+};
+
+&u2phy0 {
+	status = "okay";
+
+	u2phy0_host: host-port {
+		phy-supply = <&vcc_host>;
+		status = "okay";
+	};
+
+	u2phy0_otg: otg-port {
+		phy-supply = <&vcc_host>;
+		status = "okay";
+	};
+};
+
+&u2phy1 {
+	status = "okay";
+
+	u2phy1_host: host-port {
+		phy-supply = <&vcc_host>;
+		status = "okay";
+	};
+
+	u2phy1_otg: otg-port {
+		phy-supply = <&vcc_host>;
+		status = "okay";
+	};
+};
+
+/* Bluetooth UART (vendor serial@11020000 = UART1) */
+&uart1 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&uart1_bt_xfer &uart1_bt_cts &uart1_bt_rts>;
+	uart-has-rtscts;
+	status = "okay";
+};
+
+/* Debug console, 1.5 Mbaud (vendor fiq-debugger, UART2 on uart21 pins) */
+&uart2 {
+	pinctrl-0 = <&uart21_xfer>;
+	status = "okay";
+};
+
+&usb_host0_ehci {
+	status = "okay";
+};
+
+&usb_host0_ohci {
+	status = "okay";
+};
+
+&usb_host1_ehci {
+	status = "okay";
+};
+
+&usb_host1_ohci {
+	status = "okay";
+};
+
+&usb_host2_ehci {
+	status = "okay";
+};
+
+&usb_host2_ohci {
+	status = "okay";
+};
+
+&usb_otg {
+	status = "okay";
+};
+
+&vop {
+	status = "okay";
+};
+
+&vop_mmu {
+	status = "okay";
+};
