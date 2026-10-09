@@ -1144,6 +1144,11 @@ properties:
           - const: rockchip,rk3229-evb
           - const: rockchip,rk3229
 
+      - description: Rockchip RK3229 based "MX10" TV box
+        items:
+          - const: rockchip,rk3229-mx10
+          - const: rockchip,rk3229
+
       - description: Rockchip RK3288 Evaluation board
         items:
           - enum:
